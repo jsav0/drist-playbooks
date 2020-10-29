@@ -1,0 +1,58 @@
+#!/bin/sh
+target=shipt.com
+
+install_packages(){
+	# install packages
+	xbps-install -Sy xtools wget git gcc make subfinder jq Amass
+	echo "Y" | xdowngrade /tmp/*.xbps
+
+	# install shuffledns
+	ls /usr/bin/shuffledns || {
+		wget https://github.com/projectdiscovery/shuffledns/releases/download/v1.0.4/shuffledns_1.0.4_linux_amd64.tar.gz -qO - | tar xzvf - -C /usr/bin shuffledns
+	}
+
+	# install massdns 
+	ls /usr/bin/massdns || {
+		git clone https://github.com/blechschmidt/massdns /opt/massdns && {
+			cd /opt/massdns && make && cp bin/massdns /usr/bin/
+		}
+	}
+
+	# install findomain
+	ls /usr/bin/findomain || {
+		wget https://github.com/Findomain/Findomain/releases/download/2.1.4/findomain-linux -qO /usr/bin/findomain && chmod +x /usr/bin/findomain
+	}
+
+	# install assetfinder
+	ls /usr/bin/assetfinder || {
+		wget https://github.com/tomnomnom/assetfinder/releases/download/v0.1.0/assetfinder-linux-amd64-0.1.0.tgz -qO - | tar xzvf - -C /usr/bin assetfinder
+	}
+
+}
+
+run(){
+	# big list of DNS resolvers
+	cp -fu /home/void/.drist_files_*/resolvers.txt /tmp/ && echo "copied dns resolver list to remote /tmp" 
+
+	# custom xbps packages
+	cp -fu /home/void/.drist_files_*/*xbps /tmp/ && echo "copied custom xbps packages to remote /tmp" 
+	
+	# my modified copy of drist copies this directory and everything under it back to the local client when the script finishes
+	mkdir -p /tmp/results
+
+	# run several subdomain enumeration tools
+	printf "\n------Beginning Subdomain Enumeration-------\n"
+	subfinder -silent -rL /tmp/resolvers.txt -d $1 > /tmp/results/subfinder.txt 
+	findomain -qt $1 > /tmp/results/findomain.txt
+	curl -s "https://crt.sh/?q=$1&output=json" | jq -r '.[].name_value' | sed 's/\*\.//g' > /tmp/results/crt.txt 
+	assetfinder -subs-only $1 > /tmp/results/assetfinder.txt 
+	amass enum -passive -norecursive -noalts -d $1 -o /tmp/results/amass.txt
+}
+
+
+install_packages && {
+	run $target && {
+		cat /tmp/results/* | sort -u | shuffledns -silent -r /tmp/resolvers.txt -d $target | sort -u > /tmp/results/subdomains_resolved.txt 
+	}
+}
+
