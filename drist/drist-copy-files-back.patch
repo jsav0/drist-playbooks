@@ -1,0 +1,23 @@
+diff --git a/drist b/drist
+index be4edcd..f5c88ed 100755
+--- a/drist
++++ b/drist
+@@ -29,6 +29,10 @@ copy_files() {
+ 	fi
+ }
+ 
++copy_files_back(){
++	rsync -av -t -e "ssh" "${1}":"/tmp/results" ./
++}
++
+ # $1 = script filename
+ # $2 = remote server
+ # $3 = tempdir
+@@ -122,6 +126,7 @@ do
+ 	copy_files "files-${HOSTNAME}" "${remote_server}" "$TEMPDIR"
+ 	remote_script "script" "${remote_server}" "$TEMPDIR"
+ 	remote_script "script-${HOSTNAME}" "${remote_server}" "$TEMPDIR"
++	copy_files_back "${remote_server}"
+ 	delete_temp "${remote_server}" "$TEMPDIR"
+ 
+ 	# close socket if persistance is actived
