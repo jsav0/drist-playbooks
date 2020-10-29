@@ -6,4 +6,4 @@ $(SERVERS):
 	drist -p -s $@
 
 clean: 
-	find . -name "config.*" -exec rm -f {} \;
+	find . -name "config.mk" -exec rm -f {} \;
