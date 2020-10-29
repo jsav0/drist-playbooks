@@ -7,6 +7,3 @@ $(SERVERS):
 
 clean: 
 	find . -name "config.*" -exec rm -f {} \;
-
-ln:
-	./.link.sh
