@@ -1,0 +1,2 @@
+#!/bin/sh
+cat file && echo this is a script
