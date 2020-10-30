@@ -1,0 +1,6 @@
+This playbook replaces sudo with doas.
+In order to keep compatibility, there is a small script that replaces sudo and
+acts as a wrapper for doas.
+
+The `void` user is given *full* access by default, however you may modify
+files/etc/doas.conf if you wish.

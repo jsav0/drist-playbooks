@@ -1,0 +1,5 @@
+#!/bin/sh
+
+sudo xbps-install -Syu geomyidae
+sudo ln -s /etc/sv/geomyidae /var/service
+cp -rv gopher/ /var
