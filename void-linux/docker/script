@@ -1,0 +1,7 @@
+#!/bin/sh
+
+ls /usr/bin/docker || {
+	xbps-install -Sy docker
+	ln -s /etc/sv/docker /var/service/
+	usermod -aG docker void
+}
