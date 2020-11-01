@@ -6,7 +6,7 @@ scripts for configuring remote servers
 ```
 cd <playbook>
 drist void@server
-``
+```
 
 ### Deploying a playbook with make
 ```
