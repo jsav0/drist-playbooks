@@ -1,0 +1,18 @@
+#!/bin/sh
+
+# update 
+yum update -y
+
+# install postgresql-server
+yum install postgresql-server postgresql-contrib setools-console -y && {
+	postgresql-setup initdb
+	systemctl start postgresql
+	systemctl enable postgresql
+}
+
+# setup new role, sammy@server> psql
+#useradd sammy
+#sudo -u postgres createuser -s sammy
+#sudo -u postgres createdb sammy
+
+
