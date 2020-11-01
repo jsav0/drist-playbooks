@@ -1,0 +1,4 @@
+example.com
+dev.example.com
+admin.example.com
+blog.example.com

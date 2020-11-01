@@ -1,0 +1,82 @@
+#!/bin/sh
+
+cp -fu targets.txt /tmp/targets.txt
+mkdir -p /tmp/results
+
+#export PATH=$HOME/go/bin:/usr/local/bin:$PATH
+
+export PATH="$HOME/go/bin:/usr/local/bin:$PATH"
+export GOPATH="$HOME/go"
+
+install_pkgs(){
+	sudo xbps-install -Sy go git wget python3
+
+	echo "PATH=/home/void/go/bin:$PATH" >> ~/.bashrc
+
+	# subzy (go)
+	#ls $HOME/go/bin/subzy || 
+	go get -u -v github.com/lukasikic/subzy && go install -v github.com/lukasikic/subzy
+
+	# takeover (python)
+	sudo wget -qO /usr/local/bin/takeover https://raw.githubusercontent.com/m4ll0k/takeover/master/takeover.py && sudo chmod +x /usr/local/bin/takeover
+
+	# SubOver (go)
+	#ls $HOME/go/bin/SubOver || 
+	go get github.com/Ice3man543/SubOver
+	wget https://raw.githubusercontent.com/Ice3man543/SubOver/master/providers.json
+
+	# subjack (go)
+	#ls $HOME/go/bin/subjack || 
+	go get github.com/haccer/subjack
+	#wget https://raw.githubusercontent.com/haccer/subjack/master/fingerprints.json
+
+	# tko-subs (go)
+	#ls $HOME/go/bin/tko-subs || 
+	go get github.com/anshumanbh/tko-subs
+
+	# nuclei (go)
+	#ls $HOME/go/bin/nuclei || 
+	GO111MODULE=on go get -u -v github.com/projectdiscovery/nuclei/v2/cmd/nuclei
+}
+
+r_subzy(){
+	$HOME/go/bin/subzy -timeout 30 -concurrency 100 -hide_fails -targets targets.txt > /tmp/results/subzy_http.txt
+	$HOME/go/bin/subzy -timeout 30 -concurrency 100 -hide_fails -https -verify_ssl -targets targets.txt > /tmp/results/subzy_https.txt
+}
+
+r_tkosubs(){
+	wget -q https://raw.githubusercontent.com/anshumanbh/tko-subs/master/providers-data.csv
+	$HOME/go/bin/tko-subs -domains /tmp/targets.txt -threads 10 -output /tmp/results/tko-subs.csv
+}
+
+r_subjack(){
+	$HOME/go/bin/subjack -w targets.txt -t 100 -o /tmp/results/subjack.txt -ssl
+}
+
+r_subover(){
+	wget -q https://raw.githubusercontent.com/Ice3man543/SubOver/master/providers.json
+	$HOME/go/bin/SubOver -v -https -l targets.txt > tee /tmp/results/subover.txt
+}
+
+r_takeover(){
+	/usr/local/bin/takeover -l targets.txt -t 100 -v -o /tmp/results/takeover.txt
+}
+
+r_nuclei(){
+	$HOME/go/bin/nuclei -update-directory ./ -update-templates -silent 
+	awk '{print "http://" $1}' targets.txt | $HOME/go/bin/nuclei -t nuclei-templates/subdomain-takeover/ -silent -o /tmp/results/nuclei_http.txt
+	awk '{print "https://" $1}' targets.txt | $HOME/go/bin/nuclei -t nuclei-templates/subdomain-takeover/ -silent -o /tmp/results/nuclei_https.txt 
+}
+
+run(){
+	r_subzy
+	r_tkosubs
+	r_subjack
+	r_subover
+	r_takeover
+	r_nuclei
+}
+
+run
+
+
