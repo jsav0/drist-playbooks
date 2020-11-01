@@ -5,6 +5,13 @@ scripts for configuring remote servers
 ### Deploying a playbook
 ```
 cd <playbook>
+drist void@server
+``
+
+### Deploying a playbook with make
+```
+cd <playbook>
+ln -s ../../makefile
 echo 'SERVERS = user@server1 user@server2 user@server3' > config.mk
 make
 ```
