@@ -3,15 +3,11 @@
 cp -fu targets.txt /tmp/targets.txt
 mkdir -p /tmp/results
 
-#export PATH=$HOME/go/bin:/usr/local/bin:$PATH
-
 export PATH="$HOME/go/bin:/usr/local/bin:$PATH"
 export GOPATH="$HOME/go"
 
 install_pkgs(){
 	sudo xbps-install -Sy go git wget python3
-
-	echo "PATH=/home/void/go/bin:$PATH" >> ~/.bashrc
 
 	# subzy (go)
 	#ls $HOME/go/bin/subzy || 
