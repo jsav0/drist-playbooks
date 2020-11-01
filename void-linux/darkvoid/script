@@ -39,6 +39,7 @@ toolz="\
 	termshark \
 	john \
 	thc-hydra \
+	masscan \
 	net-snmp \
 	gdb \
 	binwalk \
@@ -54,16 +55,16 @@ toolz="\
 
 
 # bashrc
-cat <<- EOF >$HOME/.bashrc
+cat <<- EOF >/home/void/.bashrc
 	export PATH=$HOME/go/bin:/usr/local/bin/:$PATH
 	export EDITOR=/usr/bin/nvim
 	exec fish
 EOF
 
 # fish, inherits ~/.bashrc
-mkdir -p ~/.config/fish
-printf "source ~/.config/fish/aliases.fish\n" >> $HOME/.config/fish/config.fish
-cat <<- EOF >$HOME/.config/fish/aliases.fish
+mkdir -p /home/void/.config/fish
+printf "source ~/.config/fish/aliases.fish\n" >> /home/void/.config/fish/config.fish
+cat <<- EOF >/home/void/.config/fish/aliases.fish
 	alias dirsearch 'docker run -it --rm -v /usr/share/wordlists:/wordlists wfnintr/dirsearch'
 	alias knockpy 'docker run --rm -t wfnintr/knockpy'
 	alias resolver_list 'docker run -v (pwd):/dnsvalidator/output -t dnsvalidator -tL https://public-dns.info/nameservers.txt -threads 20 -o /dnsvalidator/output/resolvers.txt'
