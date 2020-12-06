@@ -1,0 +1,8 @@
+#!/bin/sh
+
+sudo xbps-install -Suy && \
+  sudo xbps-install -Sy sudo bash git xtools xz qemu-user-static neovim fish-shell
+
+cd $HOME
+git clone https://github.com/void-linux/void-mklive
+echo "done!"
