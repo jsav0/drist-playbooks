@@ -7,6 +7,9 @@
 common_utils="\
 	fish-shell \
 	git \
+	bind-utils \
+	p7zip \
+
 
 
 "
@@ -23,6 +26,18 @@ toolz="\
 
 
 "
+
+
+download_wordlists(){
+	# there may be some redundancy here among the wordlists, fyi 
+	# github.com/six2dez/OneListForALL
+	curl -sSL https://github.com/six2dez/OneListForAll/releases/download/v0.2/onelistforall.txt -o /usr/share/wordlists/onelistforall.txt
+	# github.com/danielmiessler/SecLists
+	wget https://github.com/danielmiessler/SecLists/archive/2020.4.tar.gz -O - | tar xzvf - -C /usr/share/wordlists/
+	# github.com/jhaddix
+	curl -sL https://gist.githubusercontent.com/jhaddix/86a06c5dc309d08580a018c66354a056/raw/96f4e51d96b2203f19f6381c8c545b278eaa0837/all.txt -o /usr/share/wordlists/all.txt
+}
+
 
 # xbps packages 
 common_utils="\
