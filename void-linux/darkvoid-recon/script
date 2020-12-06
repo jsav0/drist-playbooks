@@ -1,0 +1,49 @@
+#!/bin/sh
+# this playbooks will work on ARM targets as well
+
+sudo xbps-install -Sy go git bash fish-shell rsync
+
+
+HOME=/home/void
+PATH=$HOME/go/bin:/usr/local/bin:$PATH
+GOPATH=$HOME/go
+
+echo "PATH=$HOME/go/bin:$HOME/.local/bin/:/usr/local/bin:$PATH" >> $HOME/.bashrc
+echo "GOPATH=$HOME/go" >> $HOME/.bashrc
+echo "exec fish" >> $HOME/.bashrc
+
+
+# gospider
+ls /home/void/go/bin/gospider || go get -u github.com/jaeles-project/gospider
+
+# hakrawler
+ls /home/void/go/bin/hakrawler || go get github.com/hakluke/hakrawler
+
+# assetfinder
+ls /home/void/go/bin/assetfinder || go get -u github.com/tomnomnom/assetfinder
+
+# gau
+ls /home/void/go/bin/gau || GO111MODULE=on go get -u -v github.com/lc/gau
+
+# httpx
+ls /home/void/go/bin/httpx || GO111MODULE=auto go get -u -v github.com/projectdiscovery/httpx/cmd/httpx
+
+# gf 
+ls /home/void/go/bin/gf || go get -u -v github.com/tomnomnom/gf
+cp -r $GOPATH/src/github.com/tomnomnom/gf/examples $HOME/.gf
+git clone https://github.com/1ndianl33t/Gf-Patterns && mv Gf-Patterns/*.json ~/.gf
+
+# qsreplace
+ls /home/void/go/bin/qsreplace || go get -u -v github.com/tomnomnom/qsreplace
+
+#dalfox
+ls /home/void/go/bin/dalfox || go get -u -v github.com/hahwul/dalfox
+
+
+
+get_js_files(){
+	cat subdomains_resolved.txt | gau | grep '\.js$' | httpx -follow-redirects -status-code -mc 200 -content-type -silent | grep 'application/javascript' | awk '{print $1}' | httpx -silent -sr -srd results
+	cp -rv results /tmp/
+}
+
+#get_js_files
