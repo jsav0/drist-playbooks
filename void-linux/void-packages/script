@@ -1,14 +1,15 @@
 #!/bin/sh
 
 xbps-install -Suy && \
-  xbps-install -Sy sudo bash git xtools ncurses xz qemu-user-static
+  xbps-install -Sy sudo bash git xtools ncurses xz qemu-user-static fish-shell
   useradd void
   echo "void ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers.d/void
 
 cd /home/void
+#git clone https://github.com/void-linux/void-mklive
+# piraty's fork for testing rpi4 kernel
 #git clone https://github.com/Piraty/void-packages.git
 git clone https://github.com/void-linux/void-packages.git
-git clone https://github.com/void-linux/void-mklive
 chown -R void:void /home/void
 runuser -l void -c 'cd /home/void/void-packages && ./xbps-src binary-bootstrap'
 echo "done!"
