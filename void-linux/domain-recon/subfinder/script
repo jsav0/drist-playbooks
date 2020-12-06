@@ -1,58 +1,61 @@
 #!/bin/sh
-target=shipt.com
+target=
+
+export PATH=$HOME/go/bin:/usr/local/bin:$PATH
 
 install_packages(){
 	# install packages
-	xbps-install -Sy xtools wget git gcc make subfinder jq Amass
-	echo "Y" | xdowngrade /tmp/*.xbps
+	sudo xbps-install -Sy xtools wget git go gcc make subfinder jq Amass
+	echo "Y" | sudo xdowngrade *.xbps
 
 	# install shuffledns
-	ls /usr/bin/shuffledns || {
-		wget https://github.com/projectdiscovery/shuffledns/releases/download/v1.0.4/shuffledns_1.0.4_linux_amd64.tar.gz -qO - | tar xzvf - -C /usr/bin shuffledns
+	ls /usr/local/bin/shuffledns || {
+		wget https://github.com/projectdiscovery/shuffledns/releases/download/v1.0.4/shuffledns_1.0.4_linux_amd64.tar.gz -qO - | sudo tar xzvf - -C /usr/local/bin shuffledns
 	}
 
 	# install massdns 
-	ls /usr/bin/massdns || {
-		git clone https://github.com/blechschmidt/massdns /opt/massdns && {
-			cd /opt/massdns && make && cp bin/massdns /usr/bin/
+	ls /usr/local/bin/massdns || {
+		git clone https://github.com/blechschmidt/massdns massdns && {
+			cd massdns && make && sudo cp bin/massdns /usr/local/bin/ && cd -
 		}
 	}
 
 	# install findomain
-	ls /usr/bin/findomain || {
-		wget https://github.com/Findomain/Findomain/releases/download/2.1.4/findomain-linux -qO /usr/bin/findomain && chmod +x /usr/bin/findomain
+	ls /usr/local/bin/findomain || {
+		sudo wget https://github.com/Findomain/Findomain/releases/download/2.1.4/findomain-linux -qO /usr/local/bin/findomain && sudo chmod +x /usr/local/bin/findomain
 	}
 
 	# install assetfinder
-	ls /usr/bin/assetfinder || {
-		wget https://github.com/tomnomnom/assetfinder/releases/download/v0.1.0/assetfinder-linux-amd64-0.1.0.tgz -qO - | tar xzvf - -C /usr/bin assetfinder
+	ls /usr/local/bin/assetfinder || {
+		wget https://github.com/tomnomnom/assetfinder/releases/download/v0.1.0/assetfinder-linux-amd64-0.1.0.tgz -qO - | sudo tar xzvf - -C /usr/local/bin assetfinder
+	}
+
+	ls $HOME/go/bin/dnsprobe || {
+		GO111MODULE=on go get -u -v github.com/projectdiscovery/dnsprobe 
+		#sudo ln -sf /home/void/go/bin/dnsprobe /usr/local/bin/
 	}
 
 }
 
 run(){
-	# big list of DNS resolvers
-	cp -fu /home/void/.drist_files_*/resolvers.txt /tmp/ && echo "copied dns resolver list to remote /tmp" 
-
-	# custom xbps packages
-	cp -fu /home/void/.drist_files_*/*xbps /tmp/ && echo "copied custom xbps packages to remote /tmp" 
-	
 	# my modified copy of drist copies this directory and everything under it back to the local client when the script finishes
-	mkdir -p /tmp/results
+	mkdir -p results
 
 	# run several subdomain enumeration tools
 	printf "\n------Beginning Subdomain Enumeration-------\n"
-	subfinder -silent -rL /tmp/resolvers.txt -d $1 > /tmp/results/subfinder.txt 
-	findomain -qt $1 > /tmp/results/findomain.txt
-	curl -s "https://crt.sh/?q=$1&output=json" | jq -r '.[].name_value' | sed 's/\*\.//g' > /tmp/results/crt.txt 
-	assetfinder -subs-only $1 > /tmp/results/assetfinder.txt 
-	amass enum -passive -norecursive -noalts -d $1 -o /tmp/results/amass.txt
+	subfinder -silent -rL resolvers.txt -d $1 > results/subfinder.txt 
+	findomain -qt $1 > results/findomain.txt
+	curl -s "https://crt.sh/?q=$1&output=json" | jq -r '.[].name_value' | sed 's/\*\.//g' > results/crt.txt 
+	assetfinder -subs-only $1 > results/assetfinder.txt 
+	amass enum -passive -norecursive -noalts -d $1 -o results/amass.txt
 }
 
 
 install_packages && {
 	run $target && {
-		cat /tmp/results/* | sort -u | shuffledns -silent -r /tmp/resolvers.txt -d $target | sort -u > /tmp/results/subdomains_resolved.txt 
+		cat results/* | sort -u | shuffledns -silent -r resolvers.txt -d $target | sort -u > results/subdomains_resolved.txt
+		cat results/subdomains_resolved.txt | dnsprobe -silent -r A | sort -u > results/all_hosts.txt
 	}
-}
+} 
+
 

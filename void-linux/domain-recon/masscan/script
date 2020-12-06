@@ -2,8 +2,7 @@
 
 xbps-install -Sy masscan
 
-cp -f /home/void/.drist_files_*/for_masscan.txt /tmp/for_masscan.txt
-masscan -iL /tmp/for_masscan.txt -Pn -p 80,8000,8008,8800,8080,8880,8888,443,4433,8443 --rate 700  > /tmp/results-webservers-common.txt
+masscan -iL for_masscan.txt -Pn -p 80,8000,8008,8800,8080,8880,8888,443,4433,8443 --rate 700  > /tmp/results/masscan-results-webservers-common.txt
 
 
 

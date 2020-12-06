@@ -1,68 +1,56 @@
 #!/bin/sh
+SERVERS=10
+awk '{print $2}' subfinder/results/all_hosts.txt > all_hosts.txt
+
 printf "\nExecuting deploy masscan script...\n"
-#cat results.txt | docker run -i projectdiscovery/dnsprobe -silent | awk '{print $2}' | sort -u > for_masscan.txt
 
 deploy_fleet(){
-        quik deploy 1gb 3 void-linux
+        quik deploy 2gb $SERVERS void-linux
 }
  
-#fleet=$(quik deploy 1gb 3 void-linux | awk '{ if($1=/^new/){print $4}}')
-
-prepare_masscan(){
+prepare_fleet(){
         fleet=$(quik ls | awk '{ if($1=/^new/){print $4}}')
-        numOfServers=$(echo $fleet | wc -w)
-        sleep 60
-        for i in $fleet
+        sleep 70
+        for s in $fleet
         do
-		#ssh -o "StrictHostKeyChecking no" void@$i 'sudo xbps-install -Sy rsync'
-                
-		dir=scanner-$i
-		mkdir -p $dir/files
-		printf "SERVERS = void@$i\n" > $dir/config.mk
-		cp for_masscan.txt $dir/files/for_masscan.txt
-		
-		for n in $(seq 1 ${numOfServers})
-		do
-			printf "#!/bin/sh\n" >> $dir/script
-			printf "cp -f /home/void/.drist_files_*/for_masscan.txt /tmp/for_masscan.txt\n" >> $dir/script
-			echo "masscan -iL /tmp/for_masscan.txt -p0-65535 --exclude-port p80,8000,8008,8800,8080,8880,8888,443,4433,8443 --shard $n/$numOfServers" >> $dir/script
-		done
-
-
-        done
-#	echo $dir
-	exit 5
-	
-	numOfServers=$(find . -type d -name 'scanner-*' | wc -l)
-	for i in $(seq 1 ${numOfServers})
-	do
-		printf "#!/bin/sh\n" >> $dir/script
-		printf "cp -f /home/void/.drist_files_*/for_masscan.txt /tmp/for_masscan.txt\n" >> $dir/script
-		echo "masscan -iL /tmp/for_masscan.txt -p0-65535 --exclude-port p80,8000,8008,8800,8080,8880,8888,443,4433,8443 --shard $i/$numOfServers" >> script-$i
+		ssh -o "StrictHostKeyChecking no" void@$s 'sudo xbps-install -Sy rsync masscan'
 	done
-	exit 5
-
-
-}
-
-
-deploy_masscan(){
-
-        fleet=$(quik ls | awk '{ if($1=/^new/){print $4}}')
-        SERVERS=$(quik ls | awk '{ if($1=/^new/){print $4}}' | wc -l)
 	for i in $(seq 1 ${SERVERS})
 	do
-		dir=scanner-$i
+		dir=masscan/scanner-$i
+		echo "building $dir" 
 		mkdir -p $dir/files
-		cp for_masscan.txt $dir/files/for_masscan.txt
-		
-		[ ! -s $dir/script ] && {
-			printf "#!/bin/sh\n" >> $dir/script
-			printf "cp -f /home/void/.drist_files_*/for_masscan.txt /tmp/for_masscan.txt\n" >> $dir/script
-			echo "masscan -iL /tmp/for_masscan.txt -p0-65535 --exclude-port p80,8000,8008,8800,8080,8880,8888,443,4433,8443 --shard $i/3" >> $dir/script
-		}
-		
+		cp all_hosts.txt $dir/files/all_hosts.txt
+		echo "#!/bin/sh" >> $dir/script
+		echo "mkdir results" >> $dir/script
+		echo "sudo masscan -iL all_hosts.txt -p0-65535 --exclude-port 80,8000,8008,8800,8080,8880,8888,443,4433,8443 --shard $i/$SERVERS > results/masscan_$i.txt" >> $dir/script
+		chown -R void:void results
+	done
+	count=1
+	for s in $fleet
+	do
+		printf "SERVERS = void@$s\n" > masscan/scanner-$count/config.mk
+		count=$((count+1))
+	done
+
+
+}
+
+deploy_masscan(){
+	for d in masscan/scanner-*
+	do
+		cd $d
+		ln -s ../../../../makefile
+		echo "starting $d" 
+		make &
+		cd -
 	done
 }
 
-prepare_masscan
+results(){
+	find . -name 'masscan_*.txt' -exec cat {} \; > masscan_all.txt
+}
+#prepare_masscan
+deploy_fleet
+prepare_fleet
+deploy_masscan
