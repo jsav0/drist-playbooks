@@ -1,0 +1,36 @@
+#!/bin/sh
+# n0
+# File: script (drist playbook)
+# Description: Deploy my nfs server configuration to a Raspberry Pi running Void
+# a110w
+
+HOSTNAME=pinas
+
+# Set Hostname
+echo $HOSTNAME > /etc/hostname
+hostname $HOSTNAME
+
+# Install nfs utils, software-raid
+xbps-install -Sy \
+	nfs-utils \
+	mdadm \
+	fish-shell
+
+# Configure nfs exports
+mkdir -p /mnt/volA /mnt/volB /mnt/volC /mnt/volZ
+cat <<EOF > /etc/exports
+/mnt/volA    192.168.10.0/24(rw,no_root_squash)
+/mnt/volB    192.168.10.0/24(rw,no_root_squash)
+/mnt/volC    192.168.10.0/24(rw,no_root_squash)
+/mnt/volZ    192.168.10.0/24(rw,no_root_squash)
+EOF
+
+# Enable rpcbind, statd, nfs-server
+ln -sf /etc/sv/rpcbind /var/service/
+ln -sf /etc/sv/statd /var/service/
+ln -sf /etc/sv/nfs-server /var/service/
+sleep 1
+
+# show exports
+exportfs -a
+showmount -e localhost
