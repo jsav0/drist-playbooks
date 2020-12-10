@@ -1,0 +1,110 @@
+#!/bin/sh
+# n0
+# File: script (drist playbook)
+# Description: Configure a raspberry pi running void linux as a tor router
+#              using the onboard wireless nic as a wireless AP
+# a110w
+
+xbps-install -Syu tor dnsmasq hostapd
+
+configure_dhcpcd(){
+	echo "Configuring wlan0 with static IP 192.168.116.1/24.."
+	cat <<- EOF >> /etc/dhcpcd.conf
+		# configuring wlan0 with static ip
+		interface wlan0
+		static ip_address=192.168.116.1/24
+		nohook wpa_supplicant
+	EOF
+}
+
+configure_dnsmasq(){
+	echo "Configuring dnsmasq.."
+	cat <<- EOF > /etc/dnsmasq.conf
+		interface=wlan0
+		dhcp-range=192.168.116.2,192.168.116.20,255.255.255.0,24h
+	EOF
+	ln -sf /etc/sv/dnsmasq /var/service/
+	sv restart dnsmasq
+}
+
+configure_hostapd(){
+	echo "Configuring AP.."
+	cat <<- EOF > /etc/hostapd/hostapd.conf
+		interface=wlan0
+		ssid=Tor
+		hw_mode=g
+		channel=7
+		wmm_enabled=0
+		macaddr_acl=0
+		auth_algs=1
+		ignore_broadcast_ssid=0
+		wpa=2
+		wpa_passphrase=4savageonly
+		wpa_key_mgmt=WPA-PSK
+		wpa_pairwise=TKIP
+		rsn_pairwise=CCMP
+	EOF
+	ln -sf /etc/sv/hostapd /var/service/
+	sv restart hostapd
+}
+
+configure_clearnet(){
+	echo "Configuring clearnet routing"
+	echo 1 > /proc/sys/net/ipv4/ip_forward
+	iptables -F
+	iptables -t nat -F
+	iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+	iptables -A FORWARD -i eth0 -o wlan0 -m state --state RELATED,ESTABLISHED -j ACCEPT
+	iptables -A FORWARD -i wlan0 -o eth0 -j ACCEPT
+	iptables-save > /etc/iptables/wifi-hotspot.nat.rules
+
+	cat <<- EOF >> /etc/rc.local
+		[ -e /etc/iptables/wifi-hotspot.nat.rules ] && {
+		  iptables-restore /etc/iptables/wifi-hotspot.nat.rules
+		}
+	EOF
+}
+
+configure_tor(){
+	echo "Configuring tor.."
+	cat <<- EOF > /etc/tor/torrc
+		Log notice file /var/log/tor/notices.log
+		DataDirectory /var/lib/tor
+		VirtualAddrNetwork 172.16.0.0/12
+		AutomapHostsSuffixes .onion,.exit
+		AutomapHostsOnResolve 1
+		TransPort 192.168.116.1:9040
+		DNSPort 192.168.116.1:53
+		User tor
+	EOF
+
+	mkdir -p /var/log/tor
+	touch /var/log/tor/notices.log
+	chown -R tor:tor /var/log/tor
+	chmod 644 /var/log/tor/notices.log
+
+	ln -sf /etc/sv/tor /var/service/
+	sv restart tor
+}
+
+configure_tor_routing(){
+	echo 1 > /proc/sys/net/ipv4/ip_forward
+	iptables -F
+	iptables -t nat -F
+	iptables -t nat -A PREROUTING -i wlan0 -p tcp --dport 22 -j REDIRECT --to-ports 22
+	iptables -t nat -A PREROUTING -i wlan0 -p udp --dport 53 -j REDIRECT --to-ports 53
+	iptables -t nat -A PREROUTING -i wlan0 -p tcp --syn -j REDIRECT --to-ports 9040
+	iptables-save > /etc/iptables/tor.nat.rules
+	cat <<- EOF >> /etc/rc.local
+		[ -e /etc/iptables/tor.nat.rules ] && {
+		  iptables-restore /etc/iptables/tor.nat.rules
+		}
+	EOF
+}
+
+configure_dhcpcd
+configure_dnsmasq
+configure_hostapd
+configure_tor
+#configure_clearnet
+configure_tor_routing
