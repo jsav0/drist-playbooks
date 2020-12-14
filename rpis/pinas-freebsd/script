@@ -1,0 +1,24 @@
+#!/bin/sh
+# n0
+# File: script (drist playbook)
+# Description: Deploy my nfs server configuration to a Raspberry Pi running FreeBSD
+# a110w
+
+hostname pinas
+sysrc hostname="pinas"
+sysrc ntpd_enable="YES"
+sysrc ntpd_sync_on_start="YES"
+sysrc rpcbind_enable="YES"
+sysrc nfs_server_enable="YES"
+sysrc mountd_enable="YES"
+ln -sf /usr/share/zoneinfo/America/New_York /etc/localtime
+
+mkdir -p /mnt/volA /mnt/volB /mnt/volC /mnt/volZ
+cat << EOF > /etc/exports
+/mnt/volA -network 192.168.10.0 -mask=255.255.255.0
+EOF
+
+service ntpd start
+service nfsd start
+service mountd reload
+showmount -e localhost

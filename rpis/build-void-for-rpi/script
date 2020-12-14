@@ -1,0 +1,26 @@
+#!/bin/sh
+# n0
+# File: script ( drist playbook )
+# Description: automate void linux aarch-64 build rpi3-platformfs
+# n0a110w
+
+repo=https://github.com/void-linux/void-mklive
+#repo=https://github.com/void-linux/void-mklive
+
+DATECODE=$(date "+%Y%m%d")
+
+mkdir results
+
+sudo xbps-install -Suy && \
+  sudo xbps-install -Sy sudo bash git xtools xz qemu-user-static rsync
+
+git clone $repo && cd void-mklive
+make $( (make rootfs-all-print ; make images-all-sbc-print ) | grep -e aarch64-musl -e rpi3-musl)
+
+# copies the platformfs tarball to results dir to be copied back
+cp void-*-PLATFORMFS-$DATECODE.tar.xz ../results/
+
+# copies the compressed .img to the results dir to be copied back 
+#cp void-*-$DATECODE.img.xz ../results/
+
+echo "done!"
