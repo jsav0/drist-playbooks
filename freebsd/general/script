@@ -1,0 +1,28 @@
+#!/bin/sh
+
+configure_ntpd(){
+  cat <<- EOF >> /etc/rc.conf
+	ntpd_enable="YES"
+	ntpd_sync_on_start="YES"
+
+  EOF
+  service ntpd start
+}
+
+configure_nfsd(){
+	sysrc rpcbind_enable="YES"
+	sysrc nfs_server_enable="YES"
+	sysrc mountd_enable="YES"
+
+	cat <<- EOF > /etc/exports
+	  /mnt/volA -network 192.168.10.0 -mask=255.255.255.0
+	  /mnt/volB -network 192.168.10.0 -mask=255.255.255.0
+	  /mnt/volC -network 192.168.10.0 -mask=255.255.255.0
+	  /mnt/volZ -network 192.168.10.0 -mask=255.255.255.0
+	EOF
+
+	server nfsd start
+	server mountd reload
+	showmount -e localhost
+}
+
