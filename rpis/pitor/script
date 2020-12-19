@@ -83,8 +83,7 @@ configure_tor(){
 	chown -R tor:tor /var/log/tor
 	chmod 644 /var/log/tor/notices.log
 
-	ln -sf /etc/sv/tor /var/service/
-	sv restart tor
+	ln -s /etc/sv/tor /var/service/ || sv restart tor
 }
 
 configure_tor_routing(){
