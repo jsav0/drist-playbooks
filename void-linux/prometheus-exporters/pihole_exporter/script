@@ -1,0 +1,42 @@
+#!/bin/sh
+
+arch=$(uname -m)
+
+download_release(){
+	echo "downloading release..."
+	case $arch in
+		aarch64|armv8l) wget https://github.com/eko/pihole-exporter/releases/latest/download/pihole_exporter-linux-arm -qO /usr/local/bin/pihole_exporter
+			 chmod +x /usr/local/bin/pihole_exporter
+			 ;; 
+		*) exit 1
+	esac
+}
+
+install_service(){
+	echo "installing service..."
+	cat <<- EOF > /etc/systemd/system/pihole_exporter.service
+	# /etc/systemd/system/pihole_exporter.service
+	[Unit]
+	Description=prometheus pihole_exporter
+	After=network-online.target
+	Wants=network-online.target
+
+	[Service]
+	# useradd -rs /bin/false pihole_exporter
+	User=pihole_exporter
+	Group=pihole_exporter
+	ExecStart=/usr/local/bin/pihole_exporter
+	Restart=on-failure
+
+	[Install]
+	WantedBy=multi-user.target
+	EOF
+	chmod +x /etc/systemd/system/pihole_exporter.service
+	systemctl daemon-reload
+	systemctl start pihole_exporter && systemctl enable pihole_exporter
+}
+
+download_release && \
+  install_service && \
+    echo "done"
+
