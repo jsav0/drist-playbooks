@@ -1,0 +1,22 @@
+#!/bin/sh
+
+# update
+xbps-install -Suy
+
+# install packages 
+xbps-install -Suy go wget git
+
+## INSTALL TOOLS FROM SOURCE
+# install httpx
+ls /usr/local/bin/httpx || {
+	GO111MODULE=auto go get -u -v github.com/projectdiscovery/httpx/cmd/httpx
+	cp -fu /root/go/bin/httpx /usr/local/bin/
+}
+# install gau
+ls /usr/local/bin/gau || {
+	GO111MODULE=on go get -u -v github.com/lc/gau
+	cp -fu /root/go/bin/httpx /usr/local/bin/
+}
+
+
+

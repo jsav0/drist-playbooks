@@ -1,0 +1,10 @@
+#!/bin/sh
+
+# seed
+STRING=
+
+xbps-install -Sy rsync git gcc make autconf libsodium-devel
+
+git clone https://github.com/cathugger/mkp224o
+cd mkp224o && ./configure --enable-amd64-51-30k $STRING
+
