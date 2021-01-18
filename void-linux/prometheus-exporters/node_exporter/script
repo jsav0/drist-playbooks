@@ -1,0 +1,34 @@
+#!/bin/sh
+# n0
+# deploys node_exporter to a set of void linux hosts
+# a110w
+
+version=1.0.1
+arch=$(uname -m)
+DOAS=doas # doas|sudo
+
+download_release(){
+	echo "downloading release..."
+	case $arch in 
+		aarch64) release="node_exporter-$version.linux-arm64" ;;
+		*) exit 1
+	esac
+	wget "https://github.com/prometheus/node_exporter/releases/download/v$version/$release.tar.gz" -qO - | $DOAS tar xzvf - -C /usr/local/bin/ $release/node_exporter --strip=1 > /dev/null
+}
+
+install_service(){
+	echo "installing service..."
+	$DOAS mkdir -p /etc/sv/node_exporter
+	cat <<- EOF | $DOAS tee /etc/sv/node_exporter/run > /dev/null
+	#!/bin/sh
+	# /etc/sv/node_exporter/run
+	# ln -s /etc/sv/node_exporter /var/service/
+	exec /usr/local/bin/node_exporter
+	EOF
+	$DOAS chmod +x /etc/sv/node_exporter/run
+	$DOAS ln -sf /etc/sv/node_exporter /var/service/
+}
+
+download_release && \
+  install_service && \
+    echo "done"

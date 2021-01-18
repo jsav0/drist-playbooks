@@ -1,0 +1,43 @@
+#!/bin/sh
+
+
+install_service(){
+        echo "installing service..."
+        mkdir -p /etc/sv/zpool_status_exporter
+        cat <<- EOF | tee /etc/sv/zpool_status_exporter/run > /dev/null
+        #!/bin/sh
+        # /etc/sv/zpool_status_exporter/run
+        # ln -s /etc/sv/zpool_status_exporter /var/service/
+        exec /usr/local/bin/zpool_status_exporter
+        EOF
+        chmod +x /etc/sv/zpool_status_exporter/run
+        ln -sf /etc/sv/zpool_status_exporter /var/service/
+}
+
+install(){
+	echo "installing..."
+	xbps-install -Sy perl perl-Plack make git wget
+	
+	git clone https://salsa.debian.org/perl-team/modules/packages/libprometheus-tiny-perl && \
+	cd libprometheus-tiny-perl && \
+	perl Makefile.PL && \
+	make && \
+	make test && \
+	make install && \
+
+	wget https://raw.githubusercontent.com/jrcichra/zpool-status-prometheus-exporter/main/app.psgi -O /usr/local/bin/zpool_status_exporter && chmod +x /usr/local/bin/zpool_status_exporter
+
+	install_service
+	echo "done."
+}
+	
+
+uninstall(){
+	echo "uninstalling..."
+	xbps-remove -RF perl perl-Plack make git wget
+	rm -f /usr/local/bin/zpool_status_exporter 
+	echo "done."
+}
+
+install
+#uninstall

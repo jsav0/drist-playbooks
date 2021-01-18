@@ -1,0 +1,13 @@
+#!/bin/sh
+# n0
+# quick, build lxd_exporter for linux/arm64
+# a110w
+
+mkdir -p files
+git clone https://github.com/nieltg/lxd_exporter && \
+  cd lxd_exporter && \
+  mkdir build && \
+  GOOS=linux GOARCH=arm64 go build -o build ./... && \
+  cp -f build/lxd_exporter ../files/ && \
+  cd .. && \
+rm -rf lxd_exporter

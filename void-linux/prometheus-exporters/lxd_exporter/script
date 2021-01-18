@@ -1,0 +1,26 @@
+#!/bin/sh
+# n0
+# deploys lxd_exporter to a void linux host (uses linux/arm64 binary right now)
+# a110w
+
+
+install_release(){
+	cp -f lxd_exporter /usr/local/bin/
+}
+
+install_service(){
+	echo "installing service..."
+	mkdir -p /etc/sv/lxd_exporter
+	cat <<- EOF | tee /etc/sv/lxd_exporter/run > /dev/null
+	#!/bin/sh
+	# /etc/sv/lxd_exporter/run
+	# ln -s /etc/sv/lxd_exporter /var/service/
+	exec /usr/local/bin/lxd_exporter
+	EOF
+	chmod +x /etc/sv/lxd_exporter/run
+	ln -sf /etc/sv/lxd_exporter /var/service/
+}
+
+install_release && \
+  install_service && \
+    echo "done"
