@@ -1,0 +1,38 @@
+#!/bin/sh
+# n0
+# File: script (drist playbook)
+# Description: Configure an alpine container to act as a tor router and proxy
+# Usage: drist -p root@alpine-server
+# a110w
+
+INTERFACE=eth0
+IP=192.168.10.224
+
+apk update
+apk add tor iptables
+
+cat <<- EOF > /etc/tor/torrc
+        Log notice file /var/log/tor/notices.log
+        DataDirectory /var/lib/tor
+        VirtualAddrNetwork 172.16.0.0/12
+        AutomapHostsSuffixes .onion,.exit
+        AutomapHostsOnResolve 1
+        TransPort $IP:9040
+        SocksPort $IP:9050
+        DNSPort $IP:53
+        ControlPort 9051
+        CookieAuthentication 1
+        User tor
+EOF
+rc-service tor start
+rc-update add tor
+
+echo 1 > /proc/sys/net/ipv4/ip_forward
+iptables -F
+iptables -t nat -F
+iptables -t nat -A PREROUTING -i $INTERFACE -p tcp --dport 22 -j REDIRECT --to-ports 22
+iptables -t nat -A PREROUTING -i $INTERFACE -p udp --dport 53 -j REDIRECT --to-ports 53
+iptables -t nat -A PREROUTING -i $INTERFACE -p tcp --dport 9050 -j REDIRECT --to-ports 9050
+iptables -t nat -A PREROUTING -i $INTERFACE -p tcp --syn -j REDIRECT --to-ports 9040
+/etc/init.d/iptables save
+rc-update add iptables 
