@@ -1,0 +1,37 @@
+#!/bin/sh
+# n0
+# File: script
+# Description: automate void linux build for rpi4 (github.com/void-linux/void-packages/pull/26000)
+# a110w
+
+PKG_REPO=https://github.com/Piraty/void-packages #https://github.com/void-linux/void-packages
+MKLIVE_REPO=https://github.com/Piraty/void-mklive #https://github.com/void-linux/void-mklive
+
+sudo xbps-install -Syu xbps
+sudo xbps-install -yu && \
+  sudo xbps-install -y bash git xtools xz qemu-user-static rsync
+
+build_pkgs(){
+	# build packages (from branch void-linux/void-packages#26000)
+	git clone $PKG_REPO && cd void-packages
+	git checkout rpi-kernel-flavor-subpackage
+	./xbps-src -m masterdir.rpi4 binary-bootstrap
+	./xbps-src -m masterdir.rpi4 -a aarch64-musl pkg rpi-base
+	./xbps-src -m masterdir.rpi4 -a aarch64-musl pkg rpi-kernel
+	make $( (make rootfs-all-print ; make images-all-sbc-print ) | grep -e aarch64-musl -e rpi3-musl)
+}
+
+build_img(){
+	# build image (from branch void-linux/void-mklive#153)
+	cd
+	git clone $MKLIVE_REPO && cd void-mklive
+	git checkout rpi4
+	sed -i '/rpi1/d' mkplatformfs.sh.in
+	d=$(date '+%Y%m%d')
+	repo=$(xdistdir)/hostdir/binpkgs/rpi-kernel-flavor-subpackage
+	make XBPS_REPOSITORY="-r $repo" void-aarch64-musl-ROOTFS-$d.tar.xz void-rpi3-musl-$d.img.xz void-rpi4-musl-$d.img.xz
+	echo "done!"
+}
+
+build_pkgs && build_img
+

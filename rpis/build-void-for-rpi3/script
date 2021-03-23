@@ -1,0 +1,32 @@
+#!/bin/sh
+# n0
+# File: script (drist playbook)
+# Description: automate void linux build for rpi3
+# a110w
+
+REPO=https://github.com/void-linux/void-mklive
+DATECODE=$(date "+%Y%m%d")
+
+mkimg(){
+	make $( (make rootfs-all-print ; make images-all-sbc-print ) | grep -e aarch64-musl -e rpi3-musl)
+}
+
+dldeps(){
+	sudo xbps-install -Syu xbps && \
+	  sudo xbps-install -Suy && \
+	    sudo xbps-install -y bash git xtools xz qemu-user-static chroot-util-linux rsync
+	git clone $REPO && cd void-mklive
+}
+
+finish(){
+	mkdir results
+	# copies the platformfs tarball to results dir to be copied back by drist
+	cp void-*-PLATFORMFS-$DATECODE.tar.xz ../results/
+
+	# copies the compressed .img to the results dir to be copied back by drist
+	#cp void-*-$DATECODE.img.xz ../results/
+
+	echo "done!"
+}
+
+dldeps && mkimg && finish
