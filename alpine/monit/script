@@ -5,17 +5,14 @@ VERSION=5.27.2
 apk update
 apk add build-base zlib-dev monit-openrc
 
-wget https://mmonit.com/monit/dist/monit-$VERSION.tar.gz & {
-  tar xzvf monit-$VERSION.tar.gz
-  cd monit-$VERSION
-  ./configure --without-pam --without-ipv6 --without-ssl
-  make && make install
-  } 
+wget https://mmonit.com/monit/dist/monit-$VERSION.tar.gz
+tar xzvf monit-$VERSION.tar.gz
+cd monit-$VERSION
+./configure --without-pam --without-ipv6 --without-ssl --bindir=/usr/bin
+make && make install
 
 cp monitrc /etc/monitrc
 chmod 0700 /etc/monitrc
-monit -t && {
-  rc-update add monit
-  rc-service start monit
-}
-
+monit -t
+rc-update add monit
+rc-service monit start
