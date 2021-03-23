@@ -1,0 +1,13 @@
+#!/bin/sh
+
+apk update
+apk add sqlite sqlite-dev libressl libressl-dev build-base ctags git
+
+git clone https://git.causal.agency/litterbox
+cd litterbox
+./configure && {
+  make
+  make install
+}
+
+mkdir -p ~/.local/share/litterbox
