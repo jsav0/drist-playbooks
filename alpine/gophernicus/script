@@ -1,0 +1,13 @@
+#!/bin/sh
+# n0
+# file: script
+# description: build and install gophernicus on alpine
+# usage: drist -p root@server
+# depends: xinetd
+
+apk add --update git build-base
+git clone https://github.com/gophernicus/gophernicus
+cd gophernicus
+./configure --listener=xinetd
+make
+make install
