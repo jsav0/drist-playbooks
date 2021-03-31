@@ -1,4 +1,9 @@
 #!/bin/sh
+# n0
+# file: script
+# description: build and install literrbox irc logger on alpine
+# usage: drist -p root@server
+# a110w
 
 apk update
 apk add sqlite sqlite-dev libressl libressl-dev build-base ctags git

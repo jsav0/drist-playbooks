@@ -1,8 +1,8 @@
 #!/bin/sh
 # n0
-# File: script (drist playbook)
-# Description: Configure an alpine container to act as a tor router and proxy
-# Usage: drist -p root@alpine-server
+# file: script (drist playbook)
+# description: Configure an alpine container to act as a tor router and proxy
+# usage: drist -p root@alpine-server
 # a110w
 
 INTERFACE=eth0

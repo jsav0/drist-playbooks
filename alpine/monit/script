@@ -1,5 +1,11 @@
 #!/bin/sh
-# change version to update
+# n0
+# file: script
+# description: install monit on alpine linux
+# usage: drist -p root@server
+# a110w
+
+# version to update
 VERSION=5.27.2
 
 apk update
