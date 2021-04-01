@@ -1,0 +1,9 @@
+#!/bin/sh
+
+cat <<- EOF >> /etc/rc.conf
+   ntpd_enable="YES"
+   ntpd_sync_on_start="YES"
+EOF
+
+service ntpd start
+
