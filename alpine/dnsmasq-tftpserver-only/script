@@ -1,0 +1,17 @@
+#!/bin/sh
+apk add dnsmasq
+
+cat > /etc/dnsmasq.conf << EOF
+port=0
+dhcp-range=192.168.10.255,proxy
+log-dhcp
+log-facility=/var/log/dnsmasq.log
+enable-tftp
+tftp-root=/srv/tftpboot
+pxe-service=0,"Raspberry Pi Boot"
+EOF
+
+mkdir -p /srv/tftpboot
+rc-service dnsmasq start
+rc-service -c dnsmasq restart
+rc-update add dnsmasq

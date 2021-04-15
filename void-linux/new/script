@@ -1,0 +1,24 @@
+#!/bin/sh
+# depends: 
+# quik doctl deploy 1gb 3 void-linux
+# usage: 
+# echo "SERVERS=void@server1 void@server2 void@server3" > config.mk
+# make -j3
+
+xbps-install -Syu xbps
+xbps-install -Syu
+xbps-install -y catgirl tor
+ln -sf /etc/sv/tor/ /var/service
+
+mkdir -p /home/void/.config/catgirl
+
+torsocks catgirl -h 4b27t6tm5pzgpsrqpzukmlzztfn3ur55dcufaj5esu6brge5qu5nirad.onion -o > /home/void/.config/catgirl/hlirc.pem
+
+cat > /home/void/.config/catgirl/hlirc << EOF
+host = 4b27t6tm5pzgpsrqpzukmlzztfn3ur55dcufaj5esu6brge5qu5nirad.onion
+trust = hlirc.pem
+join = #hlircnet
+nick = hhvn
+EOF
+
+# to connect: `ssh -t void@serverN torsocks catgirl hlirc`
